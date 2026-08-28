@@ -17,3 +17,15 @@ class Position:
             raise ValueError("Le prix d'achat doit être positif")
         if not self.ticker:
             raise ValueError("Le ticker ne peut pas être vide")
+
+    def get_ticker(self):
+        return self.ticker
+
+    def get_quantite(self):
+        return self.quantite
+
+    def get_prix_achat(self):
+        return self.date_achat
+
+    def get_date_achat(self):
+        return self.date_achat
