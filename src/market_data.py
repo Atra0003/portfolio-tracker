@@ -1,6 +1,8 @@
 import yfinance as yf
-import matplotlib.pyplot as plt
+import streamlit as st
 
+
+@st.cache_data(ttl=600)
 def get_current_price(ticker):
     data = yf.Ticker(ticker)
     todays_data = data.history(period="1d")
@@ -8,7 +10,7 @@ def get_current_price(ticker):
     #print(actual_value)
 
 
-
+@st.cache_data(ttl=600)
 def get_price_history(ticker, p):
     data = yf.Ticker(ticker)
     DataFrame = data.history(period=p)
