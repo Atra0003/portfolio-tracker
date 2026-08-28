@@ -1,11 +1,11 @@
 from src.market_data import get_current_price, get_price_history
 from src.portfolio import Position
-from src.database import init_db, add_position, get_all_positions
+from src.database import init_db, add_position, get_all_positions, delete_position
 
 
 def main():
     ticker = "NQ=F"
-    get_current_price(ticker)
+    #get_current_price(ticker)
     #print(get_price_history(ticker, '1mo'))
 
     portfolio = Position("bbb", 10.0, 100.5, "2000-06-16")
@@ -14,6 +14,13 @@ def main():
     result =  get_all_positions()
     for i in result:
         print(i)
+    print()
+    delete_position(1)
+
+    result =  get_all_positions()
+    for i in result:
+        print(i)
+
 
 
 

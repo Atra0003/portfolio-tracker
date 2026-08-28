@@ -46,4 +46,14 @@ def get_all_positions():
         ticker, quantite, prix_achat, date_achat, id = position
         p = Position(ticker, quantite, prix_achat, date_achat, id)
         list_position.append(p)
+    connexion.close()
     return list_position
+
+
+def delete_position(id):
+    connexion = sqlite3.connect('data/portfolio.db')
+    cursor = connexion.cursor()
+    request = '''DELETE FROM portfolio WHERE id = ?'''
+    cursor.execute(request, (id,))
+    connexion.commit()
+    connexion.close()
