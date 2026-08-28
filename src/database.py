@@ -19,14 +19,14 @@ def init_db():
     connexion.close()
 
 
-def add_position(position):
+def add_position(p : Position):
     connexion = sqlite3.connect('data/portfolio.db')
     cursor = connexion.cursor()
 
-    ticker = position.ticker
-    quantite = position.quantite
-    prix_achat = position.prix_achat
-    date_achat = position.date_achat
+    ticker = p.ticker
+    quantite = p.quantite
+    prix_achat = p.prix_achat
+    date_achat = p.date_achat
 
     request = '''INSERT INTO portfolio (ticker, quantite, prix_achat, date_achat) VALUES (?, ?, ?, ?)'''
     cursor.execute(request, (ticker, quantite, prix_achat, date_achat))
@@ -50,10 +50,33 @@ def get_all_positions():
     return list_position
 
 
-def delete_position(id):
+def delete_position(id : int):
     connexion = sqlite3.connect('data/portfolio.db')
     cursor = connexion.cursor()
     request = '''DELETE FROM portfolio WHERE id = ?'''
     cursor.execute(request, (id,))
+    connexion.commit()
+    connexion.close()
+
+
+def delete_all_position():
+    connexion = sqlite3.connect('data/portfolio.db')
+    cursor = connexion.cursor()
+    request = '''DELETE FROM portfolio'''
+    cursor.execute(request)
+    connexion.commit()
+    connexion.close()
+
+
+def update_position(p : Position):
+    connexion = sqlite3.connect('data/portfolio.db')
+    cursor = connexion.cursor()
+    ticker = p.ticker
+    quantite = p.quantite
+    prix_achat = p.prix_achat
+    date_achat = p.date_achat
+    id = p.id
+    request = '''UPDATE portfolio SET ticker = ?, quantite = ?, prix_achat = ?, date_achat = ? WHERE id = ?'''
+    cursor.execute(request, (ticker, quantite, prix_achat, date_achat, id))
     connexion.commit()
     connexion.close()
