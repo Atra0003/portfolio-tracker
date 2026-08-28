@@ -1,0 +1,5 @@
+# Environement virtuel
+venv
+
+# Base de données locale
+data/portfolio.db
