@@ -1,6 +1,7 @@
 from src.market_data import get_current_price, get_price_history
-from src.portfolio import Position, calculate_position_value, calculate_gain_loss
+from src.portfolio import Position, calculate_position_value, calculate_gain_loss, calculate_portfolio_summary
 from src.database import init_db, add_position, get_all_positions, delete_position, delete_all_position, update_position
+from src.database import get_all_prices
 from datetime import date
 
 def main():
@@ -39,12 +40,26 @@ def main():
         price = get_current_price(p.ticker)
         list_price.append(calculate_position_value(p, price))
     print(list_price)
-    """
+    
     p1 = Position("AAPL", 10, 180.50, date(2025, 1, 15))
     add_position(p1)
     price = get_current_price(p1.ticker)
     result = calculate_gain_loss(p1, price)
     print(result)
+    """
+
+    #result = calculate_portfolio_summary(get_all_positions(), get_all_prices())
+    #print(result)
+
+    prices = {}
+    for p in get_all_positions():
+        price = get_current_price(p.ticker)
+        if p.ticker not in prices:
+            prices[p.ticker] = price
+        
+
+    print(calculate_portfolio_summary(get_all_positions(), prices))
+
 
 
 

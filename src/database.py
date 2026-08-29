@@ -50,6 +50,19 @@ def get_all_positions():
     return list_position
 
 
+def get_all_prices():
+    connexion = sqlite3.connect('data/portfolio.db')
+    cursor = connexion.cursor()
+    request = '''SELECT prix_achat FROM portfolio'''
+    cursor.execute(request)
+    prices = cursor.fetchall()
+    list_price = []
+    for p in prices:
+        list_price.append(p)
+    connexion.close()
+    return list_price
+
+
 def delete_position(id : int):
     connexion = sqlite3.connect('data/portfolio.db')
     cursor = connexion.cursor()
