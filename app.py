@@ -1,5 +1,5 @@
 from src.market_data import get_current_price, get_price_history
-from src.portfolio import Position, calculate_position_value, calculate_gain_loss, calculate_portfolio_summary
+from src.portfolio import Position, calculate_position_value, calculate_gain_loss, calculate_portfolio_summary, calculate_allocation
 from src.database import init_db, add_position, get_all_positions, delete_position, delete_all_position, update_position
 from src.database import get_all_prices
 from datetime import date
@@ -58,7 +58,7 @@ def main():
             prices[p.ticker] = price
         
 
-    print(calculate_portfolio_summary(get_all_positions(), prices))
+    print(calculate_allocation(get_all_positions(), prices))
 
 
 

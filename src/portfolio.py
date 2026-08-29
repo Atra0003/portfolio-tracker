@@ -43,33 +43,26 @@ def calculate_portfolio_summary(positions : list[Position], prices):
     return {"current_value" : float(current_value), "gain_perte": float(gain_perte), "gain_perte_pct" : float(gain_perte_pct)}
 
 
-"""
-    actifs = {}
 
-    valeur_total = 0
-
-    result = []
-
-    for actif in positions:
-
-        if actif.ticker not in actifs: 
-
-            actifs[actif.ticker] = actif.quantite * actif.prix_achat
-
+def calculate_allocation(positions, prices):
+    if len(positions) == 0:
+        return {}
+    valeurs_par_ticker = {}
+    total_value = 0
+    portfolio_summary = calculate_portfolio_summary(positions, prices)
+    total_value = portfolio_summary["current_value"]
+    for p in positions:
+        current_price = prices[p.ticker]
+        current_value = calculate_position_value(p, current_price)
+        if p.ticker not in valeurs_par_ticker:
+            valeurs_par_ticker[p.ticker] = current_value
         else: 
-
-            actifs[actif.ticker] = actifs[actif.ticker] + (actif.quantite * actif.prix_achat)
-
-        valeur_total = valeur_total + (actif.quantite * actif.prix_achat)
-
-    for valeur_actif in actifs.values():
-
-        calcul_en_pourcent = (valeur_actif/valeur_total) * 100 
-
-        result.append(calcul_en_pourcent)
-
-    return result
-"""
+            valeurs_par_ticker[p.ticker] += current_value
+        
+    allocations = {}
+    for ticker, value in valeurs_par_ticker.items():
+        allocations[ticker] = (value/total_value)*100
+    return allocations
         
         
 
