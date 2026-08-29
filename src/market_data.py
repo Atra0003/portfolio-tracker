@@ -8,6 +8,7 @@ def get_current_price(ticker):
     todays_data = data.history(period="1d")
     actual_value = todays_data["Close"].iloc[-1]
     #print(actual_value)
+    return actual_value
 
 
 @st.cache_data(ttl=600)

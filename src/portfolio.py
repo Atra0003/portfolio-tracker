@@ -18,14 +18,13 @@ class Position:
         if not self.ticker:
             raise ValueError("Le ticker ne peut pas être vide")
 
-    def get_ticker(self):
-        return self.ticker
 
-    def get_quantite(self):
-        return self.quantite
+def calculate_position_value(position, current_price):
+    return position.quantite * current_price
 
-    def get_prix_achat(self):
-        return self.date_achat
-
-    def get_date_achat(self):
-        return self.date_achat
+def calculate_gain_loss(position, current_price) : 
+    cout_total = position.quantite * position.prix_achat
+    current_value = calculate_position_value(position, current_price)
+    gain_perte = current_value - cout_total
+    percent = gain_perte / cout_total
+    return (gain_perte, percent) 
