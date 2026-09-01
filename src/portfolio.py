@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 
 @dataclass
 class Position:
@@ -7,6 +7,7 @@ class Position:
     quantite: float
     prix_achat: float
     date_achat: date
+    type_position : str
     id: int | None = None  # None tant que pas encore en base
 
     def __post_init__(self):
@@ -17,6 +18,8 @@ class Position:
             raise ValueError("Le prix d'achat doit être positif")
         if not self.ticker:
             raise ValueError("Le ticker ne peut pas être vide")
+        if self.type_position != "achat" and self.type_position != "vente":
+            raise ValueError("La type position ne peut être que achat ou vente")
 
 
 def calculate_position_value(position, current_price):
@@ -63,6 +66,18 @@ def calculate_allocation(positions, prices):
     for ticker, value in valeurs_par_ticker.items():
         allocations[ticker] = (value/total_value)*100
     return allocations
+
+def calculate_quantite(positions, ticker, date):
+    quantite = 0
+    for p in positions:
+        d = datetime.strptime(p.date_achat, "%Y-%m-%d").date()
+        if d <= date and p.ticker == ticker:
+            if p.type_position == "achat":
+                quantite += p.quantite
+            else: 
+                quantite -= p.quantite
+    return quantite
+
         
         
 

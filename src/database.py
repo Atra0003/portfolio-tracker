@@ -7,33 +7,25 @@ def init_db():
     cursor = connexion.cursor()
 
     table = '''CREATE TABLE IF NOT EXISTS portfolio
-                (ticker TEXT, quantite REAL, prix_achat REAL, date_achat TEXT, ID INTEGER PRIMARY KEY)
+                (ticker TEXT, quantite REAL, prix_achat REAL, date_achat TEXT, type_position TEXT, ID INTEGER PRIMARY KEY)
                 '''
     cursor.execute(table)
-    #cursor.execute("INSERT INTO portfolio (ticker, quantite, prix_achat, date_achat) VALUES ('AAA', 10, 100, '2026-06-04')")
     connexion.commit()
-    #cursor.execute("SELECT * FROM portfolio")
-    #result = cursor.fetchall()
-    #print(result)
-
     connexion.close()
+
 
 
 def add_position(p : Position):
     connexion = sqlite3.connect('data/portfolio.db')
     cursor = connexion.cursor()
-
     ticker = p.ticker
     quantite = p.quantite
     prix_achat = p.prix_achat
     date_achat = p.date_achat
-
-    request = '''INSERT INTO portfolio (ticker, quantite, prix_achat, date_achat) VALUES (?, ?, ?, ?)'''
-    cursor.execute(request, (ticker, quantite, prix_achat, date_achat))
+    type_position = p.type_position
+    request = '''INSERT INTO portfolio (ticker, quantite, prix_achat, date_achat, type_position) VALUES (?, ?, ?, ?, ?)'''
+    cursor.execute(request, (ticker, quantite, prix_achat, date_achat, type_position))
     connexion.commit()
-    #cursor.execute("SELECT * FROM portfolio")
-    #result = cursor.fetchall()
-    #print(result)
     connexion.close()
 
 def get_all_positions():
@@ -43,8 +35,8 @@ def get_all_positions():
     result = cursor.fetchall()
     list_position = []
     for position in result:
-        ticker, quantite, prix_achat, date_achat, id = position
-        p = Position(ticker, quantite, prix_achat, date_achat, id)
+        ticker, quantite, prix_achat, date_achat, type_position, id = position
+        p = Position(ticker, quantite, prix_achat, date_achat, type_position, id)
         list_position.append(p)
     connexion.close()
     return list_position
@@ -88,8 +80,23 @@ def update_position(p : Position):
     quantite = p.quantite
     prix_achat = p.prix_achat
     date_achat = p.date_achat
+    type_position = p.type_position
     id = p.id
-    request = '''UPDATE portfolio SET ticker = ?, quantite = ?, prix_achat = ?, date_achat = ? WHERE id = ?'''
-    cursor.execute(request, (ticker, quantite, prix_achat, date_achat, id))
+    request = '''UPDATE portfolio SET ticker = ?, quantite = ?, prix_achat = ?, date_achat = ?, type_position = ? WHERE id = ?'''
+    cursor.execute(request, (ticker, quantite, prix_achat, date_achat, type_position, id))
     connexion.commit()
     connexion.close()
+
+def get_all_ticker():
+    connexion = sqlite3.connect('data/portfolio.db')
+    cursor = connexion.cursor()
+    request = '''SELECT ticker FROM portfolio'''
+    cursor.execute(request)
+    result = cursor.fetchall()
+    tickers = []
+    for t in result:
+        if t[0] not in tickers:
+            tickers.append(t[0])
+    connexion.close()
+    return tickers
+
