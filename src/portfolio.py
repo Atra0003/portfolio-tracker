@@ -1,5 +1,8 @@
 from dataclasses import dataclass
 from datetime import date, datetime
+from src.market_data import get_price_history
+#from src.database import get_all_positions
+import pandas as pd 
 
 @dataclass
 class Position:
@@ -48,6 +51,7 @@ def calculate_portfolio_summary(positions : list[Position], prices):
 
 
 def calculate_allocation(positions, prices):
+    # prices := dictionnaire {ticker: prix_actuel},
     if len(positions) == 0:
         return {}
     valeurs_par_ticker = {}
@@ -77,6 +81,24 @@ def calculate_quantite(positions, ticker, date):
             else: 
                 quantite -= p.quantite
     return quantite
+
+def build_portfolio_history(positions, tickers, periode):
+    df = []
+    for t in tickers: 
+        p_r = get_price_history(t, periode)
+        p_r = p_r.rename(t)
+        df.append(p_r)
+    df = pd.concat(df, axis=1)
+    result = {}
+    for index, row in df.iterrows():
+        #arriver a avoir la quantité en fonction du ticker et la dateclear
+        v = 0
+        for t in row.items():
+            q = calculate_quantite(positions, t[0], index.date())
+            v += q * t[1]
+        result[index.date()] = v
+    return result
+
 
         
         
