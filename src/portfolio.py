@@ -72,6 +72,9 @@ def calculate_allocation(positions, prices):
     return allocations
 
 def calculate_quantite(positions, ticker, date):
+    """
+    calcule la quantité d'un actif (ticker) dans tout les positions jusqu'a une date donnée
+    """
     quantite = 0
     for p in positions:
         d = datetime.strptime(p.date_achat, "%Y-%m-%d").date()
@@ -83,6 +86,10 @@ def calculate_quantite(positions, ticker, date):
     return quantite
 
 def build_portfolio_history(positions, tickers, periode):
+    """
+    concevoir l'historique du portfolio sur une période
+    retourne un dictionnaire[date] = quantité total
+    """
     df = []
     for t in tickers: 
         p_r = get_price_history(t, periode)
@@ -94,10 +101,22 @@ def build_portfolio_history(positions, tickers, periode):
         #arriver a avoir la quantité en fonction du ticker et la dateclear
         v = 0
         for t in row.items():
-            q = calculate_quantite(positions, t[0], index.date())
-            v += q * t[1]
+            q = calculate_quantite(positions, t[0], index.date()) # calculer la quantité
+            v += q * t[1] # calcule la valeur total du portfolio
         result[index.date()] = v
     return result
+
+
+def prepare_benchmark_comparison(positions, tickers, periode, benchmark_ticker):
+    #Péparation du dictionnaire en une serie pour appliquer la base 100
+    dico = pd.Series(build_portfolio_history(positions, tickers, periode))
+    dico = (dico / dico.iloc[0]) * 100
+
+    #Application de la base 100 sur le data frame
+    benchmark = get_price_history(benchmark_ticker, periode)
+    benchmark = (benchmark / benchmark.iloc[0]) * 100 
+
+    return [dico , benchmark]
 
 
         

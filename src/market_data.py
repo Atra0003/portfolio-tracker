@@ -12,6 +12,7 @@ def get_current_price(ticker):
     return actual_value
 
 
+
 @st.cache_data(ttl=600)
 def get_price_history(ticker, p):
     "Récupérer l'historique de prix d'une action sur une période donnée"
