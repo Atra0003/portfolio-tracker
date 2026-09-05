@@ -1,9 +1,6 @@
-from src.market_data import get_current_price, get_price_history
-from src.portfolio import Position, calculate_position_value, calculate_gain_loss, calculate_portfolio_summary, calculate_allocation
-from src.portfolio import calculate_quantite, build_portfolio_history, prepare_benchmark_comparison, build_positions_table
-from src.database import init_db, add_position, get_all_positions, delete_position, delete_all_position, update_position
-from src.database import get_all_prices, get_all_ticker
-from datetime import date
+from src.market_data import get_current_price
+from src.portfolio import Position, calculate_allocation, build_portfolio_history, build_positions_table, prepare_benchmark_comparison
+from src.database import init_db, add_position, get_all_positions, get_all_tickers
 from src.charts import plot_portfolio_evolution, plot_allocation_pie, plot_vs_benchmark
 import pandas as pd
 import streamlit as st
@@ -14,8 +11,10 @@ def main():
         layout="wide"
     )
     init_db()
+    p = render_period_filter()
     render_form()
     render_table()
+    render_charts(p)
 
 
 def render_form(): 
@@ -28,17 +27,27 @@ def render_form():
 
         soumis = st.form_submit_button("Envoyer")
         if soumis:
-            date_achat = date_achat.strftime('%Y-%m-%d')
-            p = Position(ticker, quantite, prix_achat, date_achat, type_position)
             try:
+                p = Position(ticker, quantite, prix_achat, date_achat, type_position)
                 add_position(p)
-                st.success("success")
-            except ValueError:
-                st.error("erreur lors de l'ajout")
+                st.success("Position ajoutée")
+            except (ValueError, OSError) as error:
+                st.error(str(error))
+
+
+def load_current_prices(tickers):
+    return {ticker: get_current_price(ticker) for ticker in tickers}
 
 def render_table():
     positions = get_all_positions()
-    prices = get_all_prices()
+    if not positions:
+        st.info("Ajoutez une position pour afficher le portefeuille.")
+        return
+    try:
+        prices = load_current_prices({p.ticker for p in positions})
+    except (ValueError, KeyError, IndexError) as error:
+        st.error(f"Impossible de récupérer les cours actuels : {error}")
+        return
     data = build_positions_table(positions, prices)
     df = pd.DataFrame(data)
 
@@ -46,6 +55,46 @@ def render_table():
         df,
         hide_index=True,
     )
+
+def render_charts(periode):
+    positions = get_all_positions()
+    tickers = get_all_tickers()
+    if not positions:
+        return
+    period = periode
+    try:
+        prices = load_current_prices(tickers)
+        history = build_portfolio_history(positions, tickers, period)
+        st.plotly_chart(plot_portfolio_evolution(history), use_container_width=True)
+        allocations = calculate_allocation(positions, prices)
+        if allocations:
+            st.plotly_chart(plot_allocation_pie(allocations), use_container_width=True)
+        portfolio_comparison, benchmark_comparison = prepare_benchmark_comparison(
+            positions,
+            tickers,
+            period,
+            "^GSPC",
+        )
+        if not portfolio_comparison.empty and not benchmark_comparison.empty:
+            figure = plot_vs_benchmark(
+                portfolio_comparison,
+                benchmark_comparison,
+            )
+            st.plotly_chart(figure, use_container_width=True)
+        else:
+            st.warning(
+                "Données insuffisantes pour comparer le portefeuille au benchmark."
+            )
+    except (ValueError, KeyError, IndexError) as error:
+        st.error(f"Impossible de construire les graphiques : {error}")
+
+
+def render_period_filter(): 
+    option = st.selectbox(
+        "Choisir une période (1 mois, 6 mois, 1 an, tout)",
+        ("1mo", "6mo", "1y", "max")
+    )
+    return option
 
 
 

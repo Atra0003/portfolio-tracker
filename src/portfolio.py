@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from datetime import date, datetime
-from src.market_data import get_price_history, get_current_price
-#from src.database import get_all_positions
+from src.market_data import get_price_history
 import pandas as pd 
 
 @dataclass
@@ -9,7 +8,7 @@ class Position:
     ticker: str
     quantite: float
     prix_achat: float
-    date_achat: date
+    date_achat: date | str
     type_position : str
     id: int | None = None  # None tant que pas encore en base
 
@@ -19,6 +18,7 @@ class Position:
             raise ValueError("La quantité doit être positive")
         if self.prix_achat <= 0:
             raise ValueError("Le prix d'achat doit être positif")
+        self.ticker = self.ticker.strip().upper()
         if not self.ticker:
             raise ValueError("Le ticker ne peut pas être vide")
         if self.type_position != "achat" and self.type_position != "vente":
@@ -36,15 +36,18 @@ def calculate_gain_loss(position, current_price) :
     return (gain_perte, percent) 
 
 def calculate_portfolio_summary(positions : list[Position], prices):
-    current_value = 0
-    gain_perte = 0
-    cout_total = 0
+    if not positions:
+        return {"current_value": 0.0, "gain_perte": 0.0, "gain_perte_pct": 0.0}
+
+    current_value = 0.0
+    cout_total = 0.0
     for p in positions:
-        current_price = prices[p.ticker]
-        current_value += calculate_position_value(p, current_price)
-        gain_perte += calculate_gain_loss(p, current_price)[0]
-        cout_total += p.quantite * p.prix_achat
-    gain_perte_pct = gain_perte / cout_total
+        sign = 1 if p.type_position == "achat" else -1
+        current_value += sign * calculate_position_value(p, prices[p.ticker])
+        cout_total += sign * p.quantite * p.prix_achat
+
+    gain_perte = current_value - cout_total
+    gain_perte_pct = gain_perte / abs(cout_total) if cout_total else 0.0
 
     return {"current_value" : float(current_value), "gain_perte": float(gain_perte), "gain_perte_pct" : float(gain_perte_pct)}
 
@@ -55,30 +58,30 @@ def calculate_allocation(positions, prices):
     if len(positions) == 0:
         return {}
     valeurs_par_ticker = {}
-    total_value = 0
-    portfolio_summary = calculate_portfolio_summary(positions, prices)
-    total_value = portfolio_summary["current_value"]
     for p in positions:
-        current_price = prices[p.ticker]
-        current_value = calculate_position_value(p, current_price)
-        if p.ticker not in valeurs_par_ticker:
-            valeurs_par_ticker[p.ticker] = current_value
-        else: 
-            valeurs_par_ticker[p.ticker] += current_value
+        sign = 1 if p.type_position == "achat" else -1
+        current_value = sign * calculate_position_value(p, prices[p.ticker])
+        valeurs_par_ticker[p.ticker] = valeurs_par_ticker.get(p.ticker, 0.0) + current_value
+
+    # Une position totalement vendue ne doit plus apparaître dans le graphique.
+    valeurs_par_ticker = {ticker: value for ticker, value in valeurs_par_ticker.items() if value > 0}
+    total_value = sum(valeurs_par_ticker.values())
+    if total_value == 0:
+        return {}
         
     allocations = {}
     for ticker, value in valeurs_par_ticker.items():
         allocations[ticker] = (value/total_value)*100
     return allocations
 
-def calculate_quantite(positions, ticker, date):
+def calculate_quantite(positions, ticker, target_date):
     """
     calcule la quantité d'un actif (ticker) dans tout les positions jusqu'a une date donnée
     """
     quantite = 0
     for p in positions:
-        d = datetime.strptime(p.date_achat, "%Y-%m-%d").date()
-        if d <= date and p.ticker == ticker:
+        d = p.date_achat if isinstance(p.date_achat, date) else datetime.strptime(p.date_achat, "%Y-%m-%d").date()
+        if d <= target_date and p.ticker == ticker:
             if p.type_position == "achat":
                 quantite += p.quantite
             else: 
@@ -90,6 +93,9 @@ def build_portfolio_history(positions, tickers, periode):
     concevoir l'historique du portfolio sur une période
     retourne un dictionnaire[date] = quantité total
     """
+    if not positions or not tickers:
+        return {}
+
     df = []
     for t in tickers: 
         p_r = get_price_history(t, periode)
@@ -109,7 +115,9 @@ def build_portfolio_history(positions, tickers, periode):
 
 def prepare_benchmark_comparison(positions, tickers, periode, benchmark_ticker):
     #Péparation du dictionnaire en une serie pour appliquer la base 100
-    dico = pd.Series(build_portfolio_history(positions, tickers, periode))
+    dico = pd.Series(build_portfolio_history(positions, tickers, periode), dtype=float)
+    if dico.empty or dico.iloc[0] == 0:
+        return [dico, pd.Series(dtype=float)]
     dico = (dico / dico.iloc[0]) * 100
 
     #Application de la base 100 sur le data frame
@@ -126,18 +134,17 @@ def build_positions_table(positions, prices):
     valeurs = []
     gain_montant = []
     gain_pourcentage = []
-    cpt = 0
     for p in positions:
         tickers.append(p.ticker)
         quantite.append(p.quantite)
         prix_achat.append(p.prix_achat)
 
-        cp = prices[cpt]
-        prix_actuel.append(cp[0])
+        cp = prices[p.ticker]
+        prix_actuel.append(cp)
 
-        valeurs.append(calculate_position_value(p, cp[0]))
+        valeurs.append(calculate_position_value(p, cp))
 
-        cgl = calculate_gain_loss(p, cp[0])
+        cgl = calculate_gain_loss(p, cp)
         gain_montant.append(cgl[0])
         gain_pourcentage.append(cgl[1])
 
@@ -151,4 +158,3 @@ def build_positions_table(positions, prices):
             }
 
         
-

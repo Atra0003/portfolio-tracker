@@ -1,9 +1,18 @@
 from src.portfolio import Position
 import sqlite3
+from pathlib import Path
+
+
+DB_PATH = Path(__file__).resolve().parent.parent / "data" / "portfolio.db"
+
+
+def connect():
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    return sqlite3.connect(DB_PATH)
 
 
 def init_db():
-    connexion = sqlite3.connect('data/portfolio.db')
+    connexion = connect()
     cursor = connexion.cursor()
 
     table = '''CREATE TABLE IF NOT EXISTS portfolio
@@ -16,7 +25,7 @@ def init_db():
 
 
 def add_position(p : Position):
-    connexion = sqlite3.connect('data/portfolio.db')
+    connexion = connect()
     cursor = connexion.cursor()
     ticker = p.ticker
     quantite = p.quantite
@@ -29,7 +38,7 @@ def add_position(p : Position):
     connexion.close()
 
 def get_all_positions():
-    connexion = sqlite3.connect('data/portfolio.db')
+    connexion = connect()
     cursor = connexion.cursor()
     cursor.execute("SELECT * FROM portfolio")
     result = cursor.fetchall()
@@ -42,21 +51,8 @@ def get_all_positions():
     return list_position
 
 
-def get_all_prices():
-    connexion = sqlite3.connect('data/portfolio.db')
-    cursor = connexion.cursor()
-    request = '''SELECT prix_achat FROM portfolio'''
-    cursor.execute(request)
-    prices = cursor.fetchall()
-    list_price = []
-    for p in prices:
-        list_price.append(p)
-    connexion.close()
-    return list_price
-
-
 def delete_position(id : int):
-    connexion = sqlite3.connect('data/portfolio.db')
+    connexion = connect()
     cursor = connexion.cursor()
     request = '''DELETE FROM portfolio WHERE id = ?'''
     cursor.execute(request, (id,))
@@ -65,7 +61,7 @@ def delete_position(id : int):
 
 
 def delete_all_position():
-    connexion = sqlite3.connect('data/portfolio.db')
+    connexion = connect()
     cursor = connexion.cursor()
     request = '''DELETE FROM portfolio'''
     cursor.execute(request)
@@ -74,7 +70,7 @@ def delete_all_position():
 
 
 def update_position(p : Position):
-    connexion = sqlite3.connect('data/portfolio.db')
+    connexion = connect()
     cursor = connexion.cursor()
     ticker = p.ticker
     quantite = p.quantite
@@ -87,8 +83,8 @@ def update_position(p : Position):
     connexion.commit()
     connexion.close()
 
-def get_all_ticker():
-    connexion = sqlite3.connect('data/portfolio.db')
+def get_all_tickers():
+    connexion = connect()
     cursor = connexion.cursor()
     request = '''SELECT ticker FROM portfolio'''
     cursor.execute(request)
@@ -99,4 +95,3 @@ def get_all_ticker():
             tickers.append(t[0])
     connexion.close()
     return tickers
-
