@@ -1,6 +1,6 @@
 from src.market_data import get_current_price, get_price_history
 from src.portfolio import Position, calculate_position_value, calculate_gain_loss, calculate_portfolio_summary, calculate_allocation
-from src.portfolio import calculate_quantite, build_portfolio_history, prepare_benchmark_comparison
+from src.portfolio import calculate_quantite, build_portfolio_history, prepare_benchmark_comparison, build_positions_table
 from src.database import init_db, add_position, get_all_positions, delete_position, delete_all_position, update_position
 from src.database import get_all_prices, get_all_ticker
 from datetime import date
@@ -9,13 +9,14 @@ import pandas as pd
 import streamlit as st
 
 def main():
-
     st.set_page_config(
         page_title="Mon portfolio",
         layout="wide"
     )
     init_db()
     render_form()
+    render_table()
+
 
 def render_form(): 
     with st.form("add position"):
@@ -34,6 +35,18 @@ def render_form():
                 st.success("success")
             except ValueError:
                 st.error("erreur lors de l'ajout")
+
+def render_table():
+    positions = get_all_positions()
+    prices = get_all_prices()
+    data = build_positions_table(positions, prices)
+    df = pd.DataFrame(data)
+
+    st.dataframe(
+        df,
+        hide_index=True,
+    )
+
 
 
 

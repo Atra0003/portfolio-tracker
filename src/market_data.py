@@ -8,7 +8,6 @@ def get_current_price(ticker):
     data = yf.Ticker(ticker)
     todays_data = data.history(period="1d")
     actual_value = todays_data["Close"].iloc[-1]
-    #print(actual_value)
     return actual_value
 
 

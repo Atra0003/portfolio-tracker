@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import date, datetime
-from src.market_data import get_price_history
+from src.market_data import get_price_history, get_current_price
 #from src.database import get_all_positions
 import pandas as pd 
 
@@ -118,7 +118,37 @@ def prepare_benchmark_comparison(positions, tickers, periode, benchmark_ticker):
 
     return [dico , benchmark]
 
+def build_positions_table(positions, prices):
+    tickers = []
+    quantite = []
+    prix_achat = []
+    prix_actuel = []
+    valeurs = []
+    gain_montant = []
+    gain_pourcentage = []
+    cpt = 0
+    for p in positions:
+        tickers.append(p.ticker)
+        quantite.append(p.quantite)
+        prix_achat.append(p.prix_achat)
 
-        
+        cp = prices[cpt]
+        prix_actuel.append(cp[0])
+
+        valeurs.append(calculate_position_value(p, cp[0]))
+
+        cgl = calculate_gain_loss(p, cp[0])
+        gain_montant.append(cgl[0])
+        gain_pourcentage.append(cgl[1])
+
+    return {"tickers":tickers,
+            "quantite":quantite,
+            "prix d'achat":prix_achat,
+            "prix_actuel":prix_actuel,
+            "valeurs":valeurs,
+            "gain_montant":gain_montant, 
+            "gain_pourcentage":gain_pourcentage
+            }
+
         
 
