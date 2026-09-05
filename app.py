@@ -6,14 +6,36 @@ from src.database import get_all_prices, get_all_ticker
 from datetime import date
 from src.charts import plot_portfolio_evolution, plot_allocation_pie, plot_vs_benchmark
 import pandas as pd
+import streamlit as st
 
 def main():
-    positions = get_all_positions()
-    t = get_all_ticker()
-    periode = "1mo"
-    benchmark_ticker = "^GSPC"
-    dico, benchmark = prepare_benchmark_comparison(positions, t, periode, benchmark_ticker)
-    plot_vs_benchmark(dico, benchmark)
+
+    st.set_page_config(
+        page_title="Mon portfolio",
+        layout="wide"
+    )
+    init_db()
+    render_form()
+
+def render_form(): 
+    with st.form("add position"):
+        ticker = st.text_input("Enttrer le ticker : ")
+        quantite = st.number_input("Entrer une quantité")
+        prix_achat = st.number_input("Entrer le prix d'achat/vente de l'actif : ")
+        date_achat = st.date_input("Entrer la date achat/vente de l'actif : ")
+        type_position = st.selectbox("Sélectionner le type de position : ", ("achat", "vente"))
+
+        soumis = st.form_submit_button("Envoyer")
+        if soumis:
+            date_achat = date_achat.strftime('%Y-%m-%d')
+            p = Position(ticker, quantite, prix_achat, date_achat, type_position)
+            try:
+                add_position(p)
+                st.success("success")
+            except ValueError:
+                st.error("erreur lors de l'ajout")
+
+
 
     
 if __name__ == "__main__":
